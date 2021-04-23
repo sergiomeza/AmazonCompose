@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">AmazonCompose</string>
+    <string name="search_amazon">Search Amazon</string>
+    <string name="notifications">Notifications</string>
+    <string name="camera">Camera</string>
+    <string name="mic">Microphone</string>
+    <string name="location">Deliver to </string>
+    <string name="section_must_have_baby">Must Have Baby Products</string>
+    <string name="section_stuffed_under_10">Stuffed Animals &amp; Toys under $10</string>
+    <string name="section_discount_electronics">Discount Electronics</string>
+    <string name="button_shop_now">Shop Now</string>
+    <string name="button_see_more">See more</string>
+    <array name="settingsItems">
+        <item>Your Orders</item>
+        <item>Buy Again</item>
+        <item>Your Lists</item>
+    </array>
+</resources>
