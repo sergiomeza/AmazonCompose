@@ -97,7 +97,6 @@ fun HomeImage(source: String){
         data = source,
         contentDescription = "",
         contentScale = ContentScale.Crop,
-        fadeIn = true,
         loading = {
             Box(Modifier.matchParentSize()) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))

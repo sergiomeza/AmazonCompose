@@ -1,31 +1,38 @@
 package com.sergiomeza.amazoncompose.ui.activities
 
 import android.os.Bundle
+import android.util.Log
+import android.view.MotionEvent
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
 import com.sergiomeza.amazoncompose.R
@@ -33,6 +40,8 @@ import com.sergiomeza.amazoncompose.ui.screens.*
 import com.sergiomeza.amazoncompose.ui.screens.AccountScreen
 import com.sergiomeza.amazoncompose.ui.theme.AmazonComposeTheme
 import com.sergiomeza.amazoncompose.ui.theme.gradientHeader
+import com.sergiomeza.amazoncompose.ui.theme.primary
+import com.sergiomeza.amazoncompose.utils.Constants
 import com.sergiomeza.amazoncompose.utils.TextFieldState
 import com.sergiomeza.amazoncompose.utils.TextState
 import dev.chrisbanes.accompanist.insets.ProvideWindowInsets
@@ -40,6 +49,7 @@ import dev.chrisbanes.accompanist.insets.navigationBarsPadding
 import dev.chrisbanes.accompanist.insets.statusBarsPadding
 
 @ExperimentalFoundationApi
+@ExperimentalComposeUiApi
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,43 +57,75 @@ class MainActivity : AppCompatActivity() {
             val navController = rememberNavController()
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.arguments?.getString(KEY_ROUTE)
+            var linePosition by remember { mutableStateOf(0f) }
+            val animatePosition: Float by animateFloatAsState(
+                targetValue = linePosition,
+                animationSpec = tween(
+                    durationMillis = 300,
+                    delayMillis = 50,
+                    easing = LinearOutSlowInEasing
+                )
+            )
+            val items = listOf(
+                Screen.Home,
+                Screen.Account,
+                Screen.Cart,
+                Screen.Settings
+            )
             AmazonComposeTheme {
                 ProvideWindowInsets {
                     Scaffold(
                         topBar = { AppBar(currentRoute = currentRoute) },
                         bottomBar = {
-                            BottomNavigation(
-                                backgroundColor = MaterialTheme.colors.surface,
-                                modifier = Modifier.navigationBarsPadding()
-                            ) {
-                                val items = listOf(
-                                    Screen.Home,
-                                    Screen.Account,
-                                    Screen.Cart,
-                                    Screen.Settings
-                                )
-                                items.forEach { screen ->
-                                    BottomNavigationItem(
-                                        selected = currentRoute == screen.route,
-                                        onClick = {
-                                            navController.navigate(screen.route) {
-                                                popUpTo = navController.graph.startDestination
-                                                launchSingleTop = true
-                                            }
-                                        },
-                                        icon = {
-                                            if (currentRoute == screen.route) screen.iconFilled
-                                            else screen.icon?.let {
+                            Column {
+                                Canvas(modifier = Modifier
+                                    .width(85.dp)
+                                    .height(20.dp)
+                                ) {
+                                    translate(left = animatePosition) {
+                                        val canvasWidth = size.width
+                                        val canvasHeight = size.height
+                                        drawLine(
+                                            start = Offset(x = 0f, y = canvasHeight),
+                                            end = Offset(x = canvasWidth, y = canvasHeight),
+                                            color = primary,
+                                            strokeWidth = 22f
+                                        )
+                                    }
+                                }
+                                BottomNavigation(
+                                    backgroundColor = MaterialTheme.colors.surface,
+                                    modifier = Modifier.navigationBarsPadding()
+                                ) {
+                                    items.forEach { screen ->
+                                        BottomNavigationItem(
+                                            modifier = Modifier,
+                                            selected = currentRoute == screen.route,
+                                            onClick = {
+                                                val indexSelected = items.indexOf(screen)
+                                                Log.d("TAG", "onCreate: SELECTED INDEX $indexSelected")
+                                                linePosition = if (indexSelected == 0) 0f else indexSelected * 280f
+                                                navController.navigate(screen.route) {
+                                                    popUpTo = navController.graph.startDestination
+                                                    launchSingleTop = true
+                                                }
+                                            },
+                                            icon = {
+                                                var icon = screen.iconFilled
+                                                if (currentRoute != screen.route){
+                                                    icon = screen.icon
+                                                }
+
                                                 Icon(
-                                                    it,
+                                                    icon!!,
                                                     contentDescription = null,
                                                     modifier = Modifier.size(24.dp),
                                                     tint = if (currentRoute == screen.route)
                                                         MaterialTheme.colors.primary else MaterialTheme.colors.secondary
                                                 )
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -115,6 +157,7 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+@ExperimentalComposeUiApi
 @Composable
 private fun AppBar(currentRoute: String? = Screen.Home.route) {
     Box(
@@ -170,7 +213,12 @@ private fun AppBar(currentRoute: String? = Screen.Home.route) {
                         Box(
                             modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
-                            Card(Modifier.fillMaxWidth().padding(8.dp),elevation = 4.dp) {
+                            Card(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                                    .height(50.dp),
+                                elevation = 4.dp) {
                                 SearchCustomTextField(
                                     label = stringResource(id = R.string.search_amazon),
                                     state = searchState,
@@ -227,6 +275,7 @@ private fun AppBar(currentRoute: String? = Screen.Home.route) {
     }
 }
 
+@ExperimentalComposeUiApi
 @Composable
 fun SearchCustomTextField(
     label: String,
@@ -236,10 +285,27 @@ fun SearchCustomTextField(
     imeAction: ImeAction = ImeAction.Next,
     onImeAction: () -> Unit = {}
 ) {
-    OutlinedTextField(
+    //Search State
+    var searchState: Constants.SearchState
+            by remember { mutableStateOf(Constants.SearchState.NORMAL) }
+    //search icon
+    val iconSearchLeading: ImageVector =
+        if (searchState == Constants.SearchState.NORMAL)
+            Icons.Default.Search
+        else
+            Icons.Default.ArrowBack
+    //
+    val keyboardController = LocalSoftwareKeyboardController.current
+    TextField(
+        colors = TextFieldDefaults.textFieldColors(
+            backgroundColor = Color.White
+        ),
         value = state.text,
         onValueChange = {
             state.text = it
+            searchState = if (it.isNotEmpty()){
+                Constants.SearchState.SEARCHING
+            } else { Constants.SearchState.NORMAL }
         },
         placeholder = {
             Text(
@@ -249,7 +315,6 @@ fun SearchCustomTextField(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
             .onFocusChanged { focusState ->
                 val focused = focusState == FocusState.Active
                 state.onFocusChange(focused)
@@ -262,16 +327,23 @@ fun SearchCustomTextField(
         keyboardActions = KeyboardActions(
             onDone = {
                 onImeAction()
+                keyboardController?.hide()
             },
         ),
         leadingIcon = {
             IconButton(
                 modifier = Modifier.
-                    then(Modifier.size(24.dp)),
-                onClick = { /* todo */ }
+                then(Modifier.size(24.dp)),
+                onClick = {
+                    if (searchState == Constants.SearchState.SEARCHING){
+                        searchState = Constants.SearchState.NORMAL
+                        state.text = ""
+                        keyboardController?.hide()
+                    }
+                }
             ) {
                 Icon(
-                    imageVector = Icons.Default.Search,
+                    imageVector = iconSearchLeading,
                     contentDescription = stringResource(R.string.search_amazon),
                     tint = Color.Black
                 )
@@ -281,7 +353,7 @@ fun SearchCustomTextField(
             Row {
                 IconButton(
                     modifier = Modifier.
-                        then(Modifier.size(24.dp)),
+                    then(Modifier.size(24.dp)),
                     onClick = { /* todo */ }
                 ) {
                     Icon(
@@ -293,7 +365,7 @@ fun SearchCustomTextField(
                 Spacer(modifier = Modifier.size(10.dp))
                 IconButton(
                     modifier = Modifier.
-                        then(Modifier.size(24.dp)),
+                    then(Modifier.size(24.dp)),
                     onClick = { /* todo */ }
                 ) {
                     Icon(
@@ -320,4 +392,11 @@ fun TextFieldError(textError: String) {
             style = LocalTextStyle.current.copy(color = MaterialTheme.colors.error)
         )
     }
+}
+
+@ExperimentalComposeUiApi
+@Preview
+@Composable
+fun PreviewSearch(){
+    SearchCustomTextField(label = "Hola Test")
 }

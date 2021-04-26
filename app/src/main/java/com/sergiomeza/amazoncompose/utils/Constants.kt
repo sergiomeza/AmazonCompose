@@ -13,6 +13,11 @@ object Constants {
     enum class SectionType {
         GRID2, GRID3, ORDERS, PRODUCT, DEPARTMENTS
     }
+
+    enum class SearchState {
+        SEARCHING,
+        NORMAL
+    }
 }
 
 @SuppressLint("SimpleDateFormat")
