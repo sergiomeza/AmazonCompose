@@ -6,6 +6,7 @@ import androidx.compose.material.Typography
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -58,13 +59,15 @@ val AmazonTypho = Typography(
 private val DarkColorPalette = darkColors(
     primary = primary,
     primaryVariant = primary,
-    secondary = textColorDark
+    secondary = textColorDark,
+    surface = Color.Black
 )
 
 private val LightColorPalette = lightColors(
     primary = primary,
     primaryVariant = primary,
-    secondary = textColor
+    secondary = textColor,
+    surface = Color.White
 
     /* Other default colors to override
     background = Color.White,

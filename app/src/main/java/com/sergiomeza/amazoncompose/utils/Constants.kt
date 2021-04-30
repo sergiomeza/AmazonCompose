@@ -9,6 +9,7 @@ object Constants {
     const val ACCOUNT_ROUTE = "AccountScreen"
     const val CART_SCREEN = "CartScreen"
     const val SETTINGS_SCREEN = "SettingsScreen"
+    const val SEARCH_SCREEN = "SearchScreen"
 
     enum class SectionType {
         GRID2, GRID3, ORDERS, PRODUCT, DEPARTMENTS
