@@ -2,6 +2,7 @@ package com.sergiomeza.amazoncompose.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,38 +12,72 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.navArgument
+import androidx.navigation.compose.navigate
 import com.sergiomeza.amazoncompose.R
 import com.sergiomeza.amazoncompose.data.model.Search
+import com.sergiomeza.amazoncompose.data.viewmodel.SearchViewModel
 
 @ExperimentalFoundationApi
 @Composable
 fun SearchScreen(
-    navController: NavController,
     onRemoveSearch: (Search) -> Unit,
-    items: List<Search>
+    onSearchClicked: (String) -> Unit,
+    viewModel: SearchViewModel
 ) {
+    val searchState by viewModel.searchItems.observeAsState()
     Box(
         modifier = Modifier
             .padding(horizontal = 24.dp)
     ){
-        LazyColumn {
-            items(items){
-                SearchItem(
-                    search = it,
-                    onRemoveSearch = { sr ->
-                        onRemoveSearch(sr)
-                    },
-                    onSearchClicked = {
-                        Log.d("TAG", "SearchScreen: $it")
-                    }
-                )
+        if (searchState?.isEmpty() == true){
+            EmptyPage(text = stringResource(id = R.string.empty_search))
+        } else {
+            LazyColumn {
+                items(searchState!!) {
+                    SearchItem(
+                        search = it,
+                        onRemoveSearch = { sr ->
+                            onRemoveSearch(sr)
+                        },
+                        onSearchClicked = { searchTerm ->
+                            onSearchClicked(searchTerm)
+                        }
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+fun EmptyPage(text: String){
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.amazon_logo),
+            contentDescription = null,
+            modifier = Modifier
+                .size(80.dp),
+            alpha = 0.4f
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.caption,
+        )
     }
 }
 

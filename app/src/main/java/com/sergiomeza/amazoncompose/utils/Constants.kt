@@ -10,9 +10,10 @@ object Constants {
     const val CART_SCREEN = "CartScreen"
     const val SETTINGS_SCREEN = "SettingsScreen"
     const val SEARCH_SCREEN = "SearchScreen"
+    const val SEARCH_RESULT_SCREEN = "SearchResultScreen"
 
     enum class SectionType {
-        GRID2, GRID3, ORDERS, PRODUCT, DEPARTMENTS
+        LIST, GRID2, GRID3, ORDERS, PRODUCT, DEPARTMENTS
     }
 
     enum class SearchState {

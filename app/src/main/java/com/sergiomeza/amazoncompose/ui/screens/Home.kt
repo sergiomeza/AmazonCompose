@@ -18,8 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.sergiomeza.amazoncompose.R
-import com.sergiomeza.amazoncompose.data.model.Product
 import com.sergiomeza.amazoncompose.data.repository.Repository
+import com.sergiomeza.amazoncompose.data.viewmodel.ScrollViewModel
 import com.sergiomeza.amazoncompose.ui.views.Section
 import com.sergiomeza.amazoncompose.utils.Constants
 import dev.chrisbanes.accompanist.coil.CoilImage
@@ -27,14 +27,14 @@ import dev.chrisbanes.accompanist.coil.CoilImage
 @ExperimentalFoundationApi
 @Composable
 fun HomeScreen(
-    navController: NavController
+    navController: NavController,
+    scrollViewModel: ScrollViewModel
 ) {
     val listState = rememberLazyListState()
-    Box(modifier = Modifier.fillMaxSize()){
+    scrollViewModel.updateScrollPosition(listState.firstVisibleItemIndex)
+    Box {
         LazyColumn(
-            modifier =
-            Modifier
-                .padding(bottom = 50.dp)
+            modifier = Modifier
                 .fillMaxSize(),
             state = listState
         ) {
@@ -44,8 +44,9 @@ fun HomeScreen(
             item {
                 Section(
                     title = stringResource(id = R.string.section_must_have_baby),
-                    moreButton = stringResource(id = R.string.button_shop_now),
-                    data = Repository.babyProducts
+                    moreButton = stringResource(id = R.string.button_see_more_manage),
+                    data = Repository.babyProducts,
+                    sectionType = Constants.SectionType.LIST
                 )
             }
             item {

@@ -61,7 +61,7 @@ dependencies {
     implementation("io.coil-kt:coil:1.1.1")
     implementation 'dev.chrisbanes.accompanist:accompanist-coil:0.6.2'
     implementation 'dev.chrisbanes.accompanist:accompanist-insets:0.6.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.1'
 }

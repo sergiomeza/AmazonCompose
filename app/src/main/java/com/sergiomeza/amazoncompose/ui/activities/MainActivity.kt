@@ -15,6 +15,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -31,11 +33,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import com.sergiomeza.amazoncompose.R
 import com.sergiomeza.amazoncompose.data.model.Search
+import com.sergiomeza.amazoncompose.data.viewmodel.ScrollViewModel
 import com.sergiomeza.amazoncompose.data.viewmodel.SearchViewModel
 import com.sergiomeza.amazoncompose.ui.screens.*
 import com.sergiomeza.amazoncompose.ui.screens.AccountScreen
@@ -46,12 +49,12 @@ import com.sergiomeza.amazoncompose.utils.TextState
 import dev.chrisbanes.accompanist.insets.ProvideWindowInsets
 import dev.chrisbanes.accompanist.insets.navigationBarsPadding
 import dev.chrisbanes.accompanist.insets.statusBarsPadding
-import kotlinx.coroutines.launch
 
 @ExperimentalFoundationApi
 @ExperimentalComposeUiApi
 class MainActivity : AppCompatActivity() {
     private val searchViewModel by viewModels<SearchViewModel>()
+    private val scrollViewModel by viewModels<ScrollViewModel>()
 
     @ExperimentalAnimationApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,8 +62,9 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val navController = rememberNavController()
             val navBackStackEntry by navController.currentBackStackEntryAsState()
-            var currentRoute = navBackStackEntry?.arguments?.getString(KEY_ROUTE)
+            val currentRoute = navBackStackEntry?.arguments?.getString(KEY_ROUTE)
             var bottomNavVisible by remember { mutableStateOf(true) }
+            val keyboardController = LocalSoftwareKeyboardController.current
             //Animation
             var linePosition by remember { mutableStateOf(0f) }
             var lineWidth by remember { mutableStateOf(0f) }
@@ -78,23 +82,35 @@ class MainActivity : AppCompatActivity() {
                 Screen.Cart,
                 Screen.Settings
             )
+            val searchState = remember { TextState() }
+            val scrollUpState = scrollViewModel.scrollUp.observeAsState()
             AmazonComposeTheme {
                 ProvideWindowInsets {
                     Scaffold(
                         topBar = {
-                            AppBar(currentRoute = currentRoute,
+                            AppBar(
+                                currentRoute = currentRoute,
                                 searchHasFocus = { hasFocus ->
                                     bottomNavVisible = !hasFocus
                                 }, navController = navController,
                                 onSearch = {
                                     searchViewModel.addItem(Search(isRecent = true, text = it))
-                                }
+                                    searchState.onFocusChange(false)
+                                    navController.navigate("${Screen.SearchResult.route}/${it}") {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                scrollUpState = scrollUpState,
+                                searchState = searchState
                             )
-                         },
+                        },
                         bottomBar = {
+                            val bottomNavPos by animateFloatAsState(if (scrollUpState.value == true) 170f else 0f)
                             AnimatedVisibility(visible = bottomNavVisible) {
-                                Column {
-                                    Row (modifier = Modifier.fillMaxWidth()){
+                                Column(modifier = Modifier.graphicsLayer {
+                                    translationY = (bottomNavPos)
+                                }) {
+                                    Row(modifier = Modifier.fillMaxWidth()) {
                                         items.forEachIndexed { index, _ -> // Draw the top decorator of the BottomNav
                                             Column(Modifier.weight(1f)) {
                                                 val mod = if (index == 0) Modifier
@@ -108,7 +124,10 @@ class MainActivity : AppCompatActivity() {
                                                             lineWidth = canvasWidth
                                                         }
                                                         drawLine(
-                                                            start = Offset(x = 0f, y = canvasHeight),
+                                                            start = Offset(
+                                                                x = 0f,
+                                                                y = canvasHeight
+                                                            ),
                                                             end = Offset(
                                                                 x = canvasWidth,
                                                                 y = canvasHeight
@@ -130,12 +149,13 @@ class MainActivity : AppCompatActivity() {
                                                 selected = currentRoute == screen.route,
                                                 onClick = {
                                                     val indexSelected = items.indexOf(screen)
-                                                    linePosition = if (indexSelected == 0) 0f else indexSelected * lineWidth
+                                                    linePosition =
+                                                        if (indexSelected == 0) 0f else indexSelected * lineWidth
                                                     navController.navigate(screen.route)
                                                 },
                                                 icon = {
                                                     var icon = screen.iconFilled
-                                                    if (currentRoute != screen.route){
+                                                    if (currentRoute != screen.route) {
                                                         icon = screen.icon
                                                     }
 
@@ -154,30 +174,53 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     ) {
-                        NavHost(navController = navController, startDestination = Screen.Home.route,
+                        NavHost(navController = navController,
+                            startDestination = Screen.Home.route,
                             builder = {
                                 items.forEach { screen ->
                                     composable(screen.route) {
-                                        when(screen.route){
+                                        when (screen.route) {
                                             Screen.Home.route -> HomeScreen(
-                                                    navController = navController)
+                                                navController = navController,
+                                                scrollViewModel = scrollViewModel
+                                            )
                                             Screen.Account.route -> AccountScreen(
-                                                navController = navController)
+                                                navController = navController
+                                            )
                                             Screen.Cart.route -> CartScreen(
-                                                navController = navController)
+                                                navController = navController
+                                            )
                                             Screen.Settings.route -> SettingsScreen(
-                                                navController = navController)
+                                                navController = navController
+                                            )
                                         }
                                     }
                                 }
                                 composable(Screen.Search.route) {
-                                    val searchItems by searchViewModel.searchItems.collectAsState()
                                     SearchScreen(
-                                        navController = navController,
-                                        items = searchItems,
+                                        viewModel = searchViewModel,
                                         onRemoveSearch = {
                                             searchViewModel.removeSearch(it)
+                                        },
+                                        onSearchClicked = {
+                                            searchState.onFocusChange(false)
+                                            searchState.text = it
+                                            keyboardController?.hide()
+                                            navController.navigate("${Screen.SearchResult.route}/${it}") {
+                                                launchSingleTop = true
+                                            }
                                         }
+                                    )
+                                }
+                                composable("${Screen.SearchResult.route}/{term}",
+                                    arguments = listOf(navArgument("term") {
+                                        type = NavType.StringType
+                                    })
+                                ) {
+                                    SearchResultScreen(
+                                        navController = navController,
+                                        term = it.arguments?.getString("term"),
+                                        scrollViewModel = scrollViewModel
                                     )
                                 }
                             }
@@ -191,14 +234,23 @@ class MainActivity : AppCompatActivity() {
 
 @ExperimentalComposeUiApi
 @Composable
-private fun AppBar(currentRoute: String? = Screen.Home.route,
-                   searchHasFocus: (Boolean) -> Unit,
-                   navController: NavController,
-                   onSearch: (String) -> Unit) {
-    Box(
+private fun AppBar(
+    currentRoute: String? = Screen.Home.route,
+    searchHasFocus: (Boolean) -> Unit,
+    navController: NavController,
+    onSearch: (String) -> Unit,
+    scrollUpState: State<Boolean?>,
+    searchState: TextState
+) {
+    val position by animateFloatAsState(if (scrollUpState.value == true) -180f else 0f)
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
+            .graphicsLayer {
+                // TODO: Implement
+//                translationY = (position)
+            }
     ) {
         Box {
             if (currentRoute == Screen.Account.route) {
@@ -246,7 +298,6 @@ private fun AppBar(currentRoute: String? = Screen.Home.route,
                     }
                 }
             } else {
-                val searchState = remember { TextState() }
                 searchHasFocus(searchState.isFocused)
                 var paddingDp by remember { mutableStateOf(8.dp) }
                 paddingDp = if (searchState.isFocused){
@@ -271,7 +322,7 @@ private fun AppBar(currentRoute: String? = Screen.Home.route,
                                     if (isSystemInDarkTheme()) gradientHeaderDark else gradientHeader
                                 )
                             )
-                    ) {
+                    ) { //Header search
                         Box(
                             modifier = Modifier.padding(horizontal = animatePadding),
                         ) {
@@ -291,12 +342,12 @@ private fun AppBar(currentRoute: String? = Screen.Home.route,
                                             onSearch(searchState.text)
                                         }
                                     },
-                                    navController = navController
+                                    navController = navController,
+                                    currentRoute = currentRoute
                                 )
                             }
                         }
                     }
-
                     if (currentRoute != Screen.Settings.route) {
                         if (!searchState.isFocused) {
                             Box(
@@ -360,7 +411,8 @@ fun SearchCustomTextField(
         keyboardType = KeyboardType.Text),
     imeAction: ImeAction = ImeAction.Next,
     onImeAction: () -> Unit = {},
-    navController: NavController
+    navController: NavController,
+    currentRoute: String?
 ) {
     //Search State
     var searchState: Constants.SearchState
@@ -400,6 +452,9 @@ fun SearchCustomTextField(
                 }
                 state.onFocusChange(focusState.isFocused)
                 if (!focused) {
+                    if (currentRoute == Screen.Search.route) {
+                        navController.popBackStack()
+                    }
                     state.enableShowErrors()
                 } else {
                     navController.navigate(Screen.Search.route) {

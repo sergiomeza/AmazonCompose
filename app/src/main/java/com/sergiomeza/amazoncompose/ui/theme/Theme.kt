@@ -35,8 +35,13 @@ val AmazonTypho = Typography(
     ),
     h3 = TextStyle(
         fontFamily = Amazon,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp
+    ),
+    h4 = TextStyle(
+        fontFamily = Amazon,
         fontWeight = FontWeight.Light,
-        fontSize = 18.sp
+        fontSize = 14.sp
     ),
     body1 = TextStyle(
         fontFamily = Amazon,
@@ -52,6 +57,17 @@ val AmazonTypho = Typography(
         fontFamily = Amazon,
         fontWeight = FontWeight.Light,
         fontSize = 12.sp
+    ),
+    subtitle1 = TextStyle(
+        fontFamily = Amazon,
+        fontWeight = FontWeight.Light,
+        fontSize = 11.sp,
+    ),
+    subtitle2 = TextStyle(
+        fontFamily = Amazon,
+        fontWeight = FontWeight.Light,
+        fontSize = 10.sp,
+        color = Color.Gray
     )
     /*...*/
 )

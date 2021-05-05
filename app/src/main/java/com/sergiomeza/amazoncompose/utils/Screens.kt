@@ -21,4 +21,6 @@ sealed class Screen(val route: String,
         Constants.SETTINGS_SCREEN, Icons.Outlined.Menu, Icons.Filled.Menu)
     object Search : Screen(
         Constants.SEARCH_SCREEN, Icons.Outlined.Search, Icons.Filled.Search)
+    object SearchResult : Screen(
+        Constants.SEARCH_RESULT_SCREEN, Icons.Outlined.Search, Icons.Filled.Search)
 }

@@ -10,6 +10,13 @@
     <string name="section_discount_electronics">Discount Electronics</string>
     <string name="button_shop_now">Shop Now</string>
     <string name="button_see_more">See more</string>
+    <string name="empty_search">No recent search...</string>
+    <string name="button_see_more_manage"><![CDATA[See more & manage]]></string>
+    <string name="results">Results</string>
+    <string name="sponsored">Sponsored</string>
+    <string name="rating">Rating</string>
+    <string name="account">Account</string>
+    <string name="cart">Cart</string>
     <array name="settingsItems">
         <item>Your Orders</item>
         <item>Buy Again</item>
