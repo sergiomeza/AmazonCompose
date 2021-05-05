@@ -1,6 +1,7 @@
 package com.sergiomeza.amazoncompose.utils
 
 import android.annotation.SuppressLint
+import com.sergiomeza.amazoncompose.ui.screens.Screen
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -20,6 +21,12 @@ object Constants {
         SEARCHING,
         NORMAL
     }
+    val navItems = listOf(
+        Screen.Home,
+        Screen.Account,
+        Screen.Cart,
+        Screen.Settings
+    )
 }
 
 @SuppressLint("SimpleDateFormat")
